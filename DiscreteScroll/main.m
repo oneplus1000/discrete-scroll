@@ -17,8 +17,7 @@ void animate(){
             CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
             CGEventSourceSetUserData(source, (intptr_t)&userdata);
             if( scrollDelta > 0){
-                printf("u\n");
-                int speed = (int)((scrollDelta) * MAXPIXEL)/MAXLINE;
+                int speed = (int)((scrollDelta) * MAXPIXEL)/(1.5*MAXLINE);
                 if(speed <= 0 ){
                     speed = 1;
                 }
@@ -29,8 +28,8 @@ void animate(){
                 scrollDelta--;
             } else if( scrollDelta < 0){
                 //printf("u\n");
-                int div = -1*scrollDelta;
-                int speed = (int)((div) * MAXPIXEL)/MAXLINE;
+                int div = (-1)*scrollDelta;
+                int speed = (int)((div) * MAXPIXEL)/(1.5*MAXLINE);
                 if(speed <= 0 ){
                     speed = 1;
                 }
