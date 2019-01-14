@@ -13,7 +13,6 @@ void animate(){
     dispatch_queue_t q = dispatch_queue_create("My Queue",NULL);
     dispatch_async(q,^{
         while(true){
-            
             if( scrollDelta > 0){
                 int speed = (int)((scrollDelta) * MAXPIXEL)/(1.5*MAXLINE);
                 if(speed <= 0 ){
@@ -43,7 +42,7 @@ void animate(){
                 CFRelease(source);
                 scrollDelta++;
             }
-            usleep(3000);
+            usleep(5000);
         }
     });
     
@@ -57,11 +56,13 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
     int64_t lineDelta = CGEventGetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1);
     
     if(type == kCGEventOtherMouseDown) {
-        /*int mouseButton = CGEventGetIntegerValueField(event, kCGMouseEventButtonNumber);
+        long mouseButton = CGEventGetIntegerValueField(event, kCGMouseEventButtonNumber);
         if (mouseButton == 3) {
-            printf("3\n");
+            //printf("3\n");
             //animate(20);
-        }*/
+        }else if(mouseButton == 4){
+            //printf("4\n");
+        }
         return event;
     } else if(type == kCGEventScrollWheel){
         if (!CGEventGetIntegerValueField(event, kCGScrollWheelEventIsContinuous)) {
