@@ -13,31 +13,34 @@ void animate(){
     dispatch_queue_t q = dispatch_queue_create("My Queue",NULL);
     dispatch_async(q,^{
         while(true){
-            int userdata = 1234;
-            CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-            CGEventSourceSetUserData(source, (intptr_t)&userdata);
+            
             if( scrollDelta > 0){
                 int speed = (int)((scrollDelta) * MAXPIXEL)/(1.5*MAXLINE);
                 if(speed <= 0 ){
                     speed = 1;
                 }
+                int userdata = 1234; //magic number
+                CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+                CGEventSourceSetUserData(source, (intptr_t)&userdata);
                 CGEventRef scroll = CGEventCreateScrollWheelEvent(source, kCGScrollEventUnitPixel, 1, speed);
                 CGEventPost(kCGHIDEventTap, scroll);
                 CFRelease(scroll);
-                //printf("%d %d\n",scrollDelta,speed);
+                CFRelease(source);
                 scrollDelta--;
             } else if( scrollDelta < 0){
-                //printf("u\n");
-                int div = (-1)*scrollDelta;
+                long div = (-1) * scrollDelta;
                 int speed = (int)((div) * MAXPIXEL)/(1.5*MAXLINE);
                 if(speed <= 0 ){
                     speed = 1;
                 }
-                speed = -speed;
+                speed = (-1) * speed;
+                int userdata = 1234; //magic number
+                CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+                CGEventSourceSetUserData(source, (intptr_t)&userdata);
                 CGEventRef scroll = CGEventCreateScrollWheelEvent(source, kCGScrollEventUnitPixel, 1, speed);
                 CGEventPost(kCGHIDEventTap, scroll);
                 CFRelease(scroll);
-                //printf("%d %d\n",scrollDelta,speed);
+                CFRelease(source);
                 scrollDelta++;
             }
             usleep(3000);
@@ -60,22 +63,28 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
             //animate(20);
         }*/
         return event;
-    }else if(type == kCGEventScrollWheel){
+    } else if(type == kCGEventScrollWheel){
         if (!CGEventGetIntegerValueField(event, kCGScrollWheelEventIsContinuous)) {
             int64_t eventInfo = CGEventGetIntegerValueField(event, kCGEventSourceUserData);
-            //printf("\t%d delta= %d lineDelta=%ld\n", eventInfo ,delta,lineDelta);
-            if(eventInfo == 0){
+            if(eventInfo == 0){ //eventInfo == 0 it mean scroll by real mouse
                 if( lineDelta > 0 ){
-                    scrollDelta += MAXLINE;
-                    if( scrollDelta > MAXLINE ){
+                    int64_t tmp = scrollDelta;
+                    tmp += MAXLINE;
+                    if( tmp > MAXLINE ){
                         scrollDelta = MAXLINE;
+                    }else{
+                        scrollDelta = tmp;
                     }
                     CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
-                }else if(lineDelta < 0 ){
-                    scrollDelta -= MAXLINE;
-                    if( scrollDelta < -MAXLINE ){
+                } else if(lineDelta < 0 ){
+                    int64_t tmp = scrollDelta;
+                    tmp -= MAXLINE;
+                    if( tmp < -MAXLINE ){
                         scrollDelta = -MAXLINE;
+                    } else {
+                        scrollDelta = tmp;
                     }
+                    CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
                 }
             }
         
