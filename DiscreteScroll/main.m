@@ -2,14 +2,16 @@
 //#import <Foundation/NSThread.h>
 
 #define SIGN(x) (((x) > 0) - ((x) < 0))
-#define LINES 2
+
 
 //bool isFakeScroll = false;
 int64_t scrollDelta = 0;
 #define MAXLINE 100
 #define MAXPIXEL 5
 
-void animate(){
+bool smooth = false;
+
+void smoothTask(){
     dispatch_queue_t q = dispatch_queue_create("My Queue",NULL);
     dispatch_async(q,^{
         while(true){
@@ -65,30 +67,45 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
         }
         return event;
     } else if(type == kCGEventScrollWheel){
-        if (!CGEventGetIntegerValueField(event, kCGScrollWheelEventIsContinuous)) {
-            int64_t eventInfo = CGEventGetIntegerValueField(event, kCGEventSourceUserData);
-            if(eventInfo == 0){ //eventInfo == 0 it mean scroll by real mouse
-                if( lineDelta > 0 ){
-                    int64_t tmp = scrollDelta;
-                    tmp += MAXLINE;
-                    if( tmp > MAXLINE ){
-                        scrollDelta = MAXLINE;
-                    }else{
-                        scrollDelta = tmp;
+        if( smooth ) {
+            if (!CGEventGetIntegerValueField(event, kCGScrollWheelEventIsContinuous)) {
+                int64_t eventInfo = CGEventGetIntegerValueField(event, kCGEventSourceUserData);
+                if(eventInfo == 0){ //eventInfo == 0 it mean scroll by real mouse
+                    if( lineDelta > 0 ){
+                        int64_t tmp = scrollDelta;
+                        tmp += MAXLINE;
+                        if( tmp > MAXLINE ){
+                            scrollDelta = MAXLINE;
+                        }else{
+                            scrollDelta = tmp;
+                        }
+                        CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
+                    } else if(lineDelta < 0 ){
+                        int64_t tmp = scrollDelta;
+                        tmp -= MAXLINE;
+                        if( tmp < -MAXLINE ){
+                            scrollDelta = -MAXLINE;
+                        } else {
+                            scrollDelta = tmp;
+                        }
+                        CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
                     }
-                    CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
-                } else if(lineDelta < 0 ){
-                    int64_t tmp = scrollDelta;
-                    tmp -= MAXLINE;
-                    if( tmp < -MAXLINE ){
-                        scrollDelta = -MAXLINE;
-                    } else {
-                        scrollDelta = tmp;
-                    }
-                    CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * 1);
                 }
             }
-        
+        }else{
+            int line = 3;
+            if(delta > 0  ){  //up
+                line = 4;
+                printf("%d\n",delta);
+                if(delta > 100){
+                    delta = 100;
+                }
+            }else if(delta < 0){ //down
+                if(delta < -50){
+                    delta = -50;
+                }
+            }
+            CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * line);
         }
     }
     
@@ -98,7 +115,9 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
 
 int main(void)
 {
-    animate();
+    if(smooth){
+        smoothTask();
+    }
     CFMachPortRef eventTap;
     CFRunLoopSourceRef runLoopSource;
     eventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
