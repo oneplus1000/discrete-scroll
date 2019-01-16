@@ -93,19 +93,21 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
                 }
             }
         }else{
-            int line = 3;
-            if(delta > 0  ){  //up
-                line = 4;
-                printf("%d\n",delta);
-                if(delta > 100){
-                    delta = 100;
+            if (!CGEventGetIntegerValueField(event, kCGScrollWheelEventIsContinuous)) {
+                int line = 3;
+                if(delta > 0  ){  //up
+                    line = 4;
+                    //printf("%d\n",delta);
+                    if(delta > 100){
+                        delta = 100;
+                    }
+                }else if(delta < 0){ //down
+                    if(delta < -50){
+                        delta = -50;
+                    }
                 }
-            }else if(delta < 0){ //down
-                if(delta < -50){
-                    delta = -50;
-                }
+                CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * line);
             }
-            CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * line);
         }
     }
     
