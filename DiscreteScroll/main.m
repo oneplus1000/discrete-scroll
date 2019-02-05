@@ -57,6 +57,11 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
     int64_t delta = CGEventGetIntegerValueField(event, kCGScrollWheelEventPointDeltaAxis1);
     int64_t lineDelta = CGEventGetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1);
     
+    int64_t delta2 = CGEventGetIntegerValueField(event, kCGScrollWheelEventPointDeltaAxis2);
+    int64_t lineDelta2 = CGEventGetIntegerValueField(event, kCGScrollWheelEventDeltaAxis2);
+    
+    
+    
     if(type == kCGEventOtherMouseDown) {
         long mouseButton = CGEventGetIntegerValueField(event, kCGMouseEventButtonNumber);
         if (mouseButton == 3) {
@@ -102,11 +107,16 @@ CGEventRef cgEventCallback(CGEventTapProxy proxy, CGEventType type,
                         delta = 100;
                     }
                 }else if(delta < 0){ //down
-                    if(delta < -50){
-                        delta = -50;
+                    if(delta < -100){
+                        delta = -100;
                     }
                 }
                 CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta) * line);
+                
+                if( delta2 != 0 ){
+                    int line2 = 22;
+                    CGEventSetIntegerValueField(event, kCGScrollWheelEventDeltaAxis1, SIGN(delta2) * line2);
+                }
             }
         }
     }
@@ -124,6 +134,7 @@ int main(void)
     CFRunLoopSourceRef runLoopSource;
     eventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, 0,
                                ( 1 << kCGEventOtherMouseDown) | 1 << kCGEventScrollWheel, cgEventCallback, NULL);
+    
     runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
     
     CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
